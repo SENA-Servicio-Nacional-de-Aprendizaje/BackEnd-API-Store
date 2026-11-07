@@ -1,0 +1,75 @@
+name: Flask CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  # -------------------------------------------------------------------------
+  # FASE 1: INTEGRACIÓN CONTINUA (CI) - Ejecutar Pruebas
+  # -------------------------------------------------------------------------
+  test:
+    name: Ejecutar Pruebas Unitarias e Integracion
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Descargar codigo del repositorio
+        uses: actions/checkout@v4
+
+      - name: Configurar version de Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: "pip"
+
+      - name: Instalar librerias y Pytest
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+          pip install pytest pytest-cov
+
+      - name: Correr pruebas unitarias
+        run: |
+          pytest tests/unit/ -v
+
+      - name: Correr pruebas de integracion
+        run: |
+          pytest tests/integration/ -v
+        env:
+          # Para que las pruebas corran en GitHub sin necesitar la BD de AWS,
+          # usamos una base de datos ligera en memoria:
+          DATABASE_URL: "sqlite:///:memory:"
+          TESTING: "True"
+
+  # -------------------------------------------------------------------------
+  # FASE 2: DESPLIEGUE CONTINUO (CD) - Actualizar el Servidor EC2
+  # -------------------------------------------------------------------------
+  deploy:
+    name: Desplegar en Servidor AWS EC2
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Conectar por SSH y actualizar la aplicacion
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.EC2_HOST }}
+          username: ${{ secrets.EC2_USER }}
+          key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+          script: |
+            if [ ! -d "/home/${{ secrets.EC2_USER }}/BackEnd-API-Store" ]; then
+              git clone https://github.com/${{ github.repository }}.git /home/${{ secrets.EC2_USER }}/BackEnd-API-Store
+              cd /home/${{ secrets.EC2_USER }}/BackEnd-API-Store
+              python3 -m venv venv
+            else
+              cd /home/${{ secrets.EC2_USER }}/BackEnd-API-Store
+              git pull origin main
+            fi
+            source venv/bin/activate
+            pip install -r requirements.txt
+            if command -v flask &> /dev/null && [ -d "migrations" ]; then
+              flask db upgrade
+            fi
+            sudo systemctl restart flaskapp

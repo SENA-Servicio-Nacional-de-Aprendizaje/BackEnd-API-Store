@@ -1,0 +1,29 @@
+# Environments
+.env
+.env.local
+.venv
+venv/
+ENV/
+
+# Node (referencia del proyecto original)
+node_modules/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+dist/
+build/
+.pytest_cache/
+
+# Uploads generados
+public/uploads/avatars/avatar-*
+public/uploads/categories/category-*
+public/uploads/products/product-*
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
