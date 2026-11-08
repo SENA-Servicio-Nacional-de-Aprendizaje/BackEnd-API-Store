@@ -1,0 +1,9 @@
+meta:
+  name: Update Product
+  seq: 4
+
+patch:
+  url: {{baseUrl}}/api/products/:id
+  body: json
+  headers:
+    X-Token: {{token}}

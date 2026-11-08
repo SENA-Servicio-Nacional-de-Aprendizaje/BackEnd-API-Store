@@ -1,0 +1,9 @@
+meta:
+  name: Update Category
+  seq: 4
+
+patch:
+  url: {{baseUrl}}/api/categories/:id
+  body: json
+  headers:
+    X-Token: {{token}}

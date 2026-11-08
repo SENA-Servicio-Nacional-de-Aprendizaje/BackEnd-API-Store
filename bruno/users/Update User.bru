@@ -1,0 +1,9 @@
+meta:
+  name: Update User
+  seq: 4
+
+patch:
+  url: {{baseUrl}}/api/users/:id
+  body: json
+  headers:
+    X-Token: {{token}}

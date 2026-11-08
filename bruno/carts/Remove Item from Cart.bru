@@ -1,0 +1,9 @@
+meta:
+  name: Remove Item from Cart
+  seq: 4
+
+delete:
+  url: {{baseUrl}}/api/cart/item/:product_id
+  body: none
+  headers:
+    X-Token: {{token}}
